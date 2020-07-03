@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type Response struct {
@@ -52,7 +53,7 @@ func getResultObj(resultObj Response) {
 		var searchResponse int
 
 		fmt.Println("What do you want to search?")
-		fmt.Printf("[1]ID [2]Country\n->")
+		fmt.Printf("[1]ID [2]Country [3]View All\n->")
 		fmt.Scanf("%d", &searchResponse)
 
 		switch searchResponse {
@@ -98,8 +99,26 @@ func getResultObj(resultObj Response) {
 					}
 				}
 			}
-		}
 
+		case 3:
+			var sumConfirmed int
+			var sumRecovered int
+			var sumDeaths int
+			var sumActive int
+
+			for i := 0; i < len(resultObj.Features); i++ {
+				sumConfirmed = sumConfirmed + resultObj.Features[i].Attributes.Confirmed
+				sumRecovered = sumRecovered + resultObj.Features[i].Attributes.Recovered
+				sumDeaths = sumDeaths + resultObj.Features[i].Attributes.Deaths
+				sumActive = sumActive + resultObj.Features[i].Attributes.Active
+			}
+
+			fmt.Printf("\n> World <\n\n> Confirmed: %d <\n", sumConfirmed)
+			fmt.Printf("> Recovered: %d <\n", sumRecovered)
+			fmt.Printf("> Deaths: %d <\n", sumDeaths)
+			fmt.Printf("> Active: %d <\n\n", sumActive)
+		}
+		timeNow()
 		fmt.Print("Do you want do search again? (YES/NO)\n->")
 		fmt.Scanf("%s", &answer)
 		fmt.Print("\n")
@@ -115,4 +134,11 @@ func getResult(resultObj Response, position int) {
 	fmt.Printf("> Recovered: %d <\n", resultObj.Features[position].Attributes.Recovered)
 	fmt.Printf("> Deaths: %d <\n", resultObj.Features[position].Attributes.Deaths)
 	fmt.Printf("> Active: %d <\n\n", resultObj.Features[position].Attributes.Active)
+}
+
+func timeNow() {
+	const layout = "02/01/2006"
+	timeNow := time.Now()
+
+	fmt.Print(timeNow.Format(layout), "\n\n")
 }
