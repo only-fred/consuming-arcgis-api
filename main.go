@@ -30,6 +30,7 @@ type Attributes struct {
 
 func main() {
 	url := "https://services1.arcgis.com/0MSEUqKaxRlEPj5g/ArcGIS/rest/services/ncov_cases/FeatureServer/1/query?where=1%3D1&outFields=*&f=pjson"
+
 	result, err := http.Get(url)
 	if err != nil {
 		log.Fatal(err)
@@ -53,7 +54,7 @@ func getResultObj(resultObj Response) {
 		var searchResponse int
 
 		fmt.Println("What do you want to search?")
-		fmt.Printf("[1]ID [2]Country [3]View All\n->")
+		fmt.Printf("[1]ID [2]Country [3]View All [4]Monior\n->")
 		fmt.Scanf("%d", &searchResponse)
 
 		switch searchResponse {
@@ -65,9 +66,10 @@ func getResultObj(resultObj Response) {
 
 			for i := 0; i < len(resultObj.Features); i++ {
 				if searchResponseID == resultObj.Features[i].Attributes.OBJECTID {
-					getResult(resultObj, i)
+					showResultValue(resultObj, i)
 				}
 			}
+			break
 
 		case 2:
 			var searchResponseCountry string
@@ -89,35 +91,36 @@ func getResultObj(resultObj Response) {
 
 				for i := 0; i < len(resultObj.Features); i++ {
 					if searchResponseState == resultObj.Features[i].Attributes.ProvinceState {
-						getResult(resultObj, i)
+						showResultValue(resultObj, i)
 					}
 				}
 			} else {
 				for i := 0; i < len(resultObj.Features); i++ {
 					if searchResponseCountry == resultObj.Features[i].Attributes.CountryRegion {
-						getResult(resultObj, i)
+						showResultValue(resultObj, i)
 					}
 				}
 			}
+			break
 
 		case 3:
-			var sumConfirmed int
-			var sumRecovered int
-			var sumDeaths int
-			var sumActive int
+			sumAndShowAllValues(resultObj)
+			break
 
-			for i := 0; i < len(resultObj.Features); i++ {
-				sumConfirmed = sumConfirmed + resultObj.Features[i].Attributes.Confirmed
-				sumRecovered = sumRecovered + resultObj.Features[i].Attributes.Recovered
-				sumDeaths = sumDeaths + resultObj.Features[i].Attributes.Deaths
-				sumActive = sumActive + resultObj.Features[i].Attributes.Active
+		case 4:
+			fmt.Print("\nWill refresh each 1 minutes\n")
+
+			for {
+				sumAndShowAllValues(resultObj)
+				fmt.Print("To stop: Ctrl+C\n")
+				timeNow()
+				time.Sleep(1 * time.Minute)
 			}
 
-			fmt.Printf("\n> World <\n\n> Confirmed: %d <\n", sumConfirmed)
-			fmt.Printf("> Recovered: %d <\n", sumRecovered)
-			fmt.Printf("> Deaths: %d <\n", sumDeaths)
-			fmt.Printf("> Active: %d <\n\n", sumActive)
+		default:
+			fmt.Print("\nType a valid value!\n\n")
 		}
+
 		timeNow()
 		fmt.Print("Do you want do search again? (YES/NO)\n->")
 		fmt.Scanf("%s", &answer)
@@ -126,7 +129,7 @@ func getResultObj(resultObj Response) {
 	}
 }
 
-func getResult(resultObj Response, position int) {
+func showResultValue(resultObj Response, position int) {
 	fmt.Printf("\n> ID: %d <\n", resultObj.Features[position].Attributes.OBJECTID)
 	fmt.Printf("\n> Country: %s <\n", resultObj.Features[position].Attributes.CountryRegion)
 	fmt.Printf("> State: %s <\n", resultObj.Features[position].Attributes.ProvinceState)
@@ -136,8 +139,27 @@ func getResult(resultObj Response, position int) {
 	fmt.Printf("> Active: %d <\n\n", resultObj.Features[position].Attributes.Active)
 }
 
+func sumAndShowAllValues(resultObj Response) {
+	var sumConfirmed int
+	var sumRecovered int
+	var sumDeaths int
+	var sumActive int
+
+	for i := 0; i < len(resultObj.Features); i++ {
+		sumConfirmed = sumConfirmed + resultObj.Features[i].Attributes.Confirmed
+		sumRecovered = sumRecovered + resultObj.Features[i].Attributes.Recovered
+		sumDeaths = sumDeaths + resultObj.Features[i].Attributes.Deaths
+		sumActive = sumActive + resultObj.Features[i].Attributes.Active
+	}
+
+	fmt.Printf("\n> World <\n\n> Confirmed: %d <\n", sumConfirmed)
+	fmt.Printf("> Recovered: %d <\n", sumRecovered)
+	fmt.Printf("> Deaths: %d <\n", sumDeaths)
+	fmt.Printf("> Active: %d <\n\n", sumActive)
+}
+
 func timeNow() {
-	const layout = "02/01/2006"
+	const layout = "02/01/2006 - 15:04"
 	timeNow := time.Now()
 
 	fmt.Print(timeNow.Format(layout), "\n\n")
